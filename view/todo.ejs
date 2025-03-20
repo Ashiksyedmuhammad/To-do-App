@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Todo App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Bundle with Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+    <style>
+        body {
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl text-center font-bold mb-8">Todo Application</h1>
+
+
+
+        <!-- Create Task Form -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Create New Task</h2>
+            <form id="taskForm">
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="text-sm block font-medium mb-1">Title</label>
+                        <input id="title" type="text" name="title" required class="border p-2 rounded w-full">
+                    </div>
+                    <div>
+                        <label class="text-sm block font-medium mb-1">Description</label>
+                        <textarea id="description" name="description" required
+                            class="border p-2 rounded w-full"></textarea>
+                    </div>
+                    <button type="submit" class="bg-green-900 rounded text-white hover:bg-green-800 px-4 py-2">
+                        Create Task
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Task List -->
+       
+        <div class="container bg-white p-6 rounded-md shadow-md">
+            <h2 class="text-center text-xl font-semibold mb-4">Tasks</h2>
+            <div class="grid grid-cols-1 gap-2">
+                <% task.forEach(task=> { %>
+                    <div class="border p-4 rounded">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-semibold">
+                                    <%= task.title %>
+                                </h3>
+                                <p class="text-gray-600">
+                                    <%= task.description %>
+                                </p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <%if(!task.isCompleted){%>
+                                    <a href="#" class="btn btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#editTaskModal<%= task._id %>">
+                                    Edit <i class="fa-pen-to-square fa-solid"></i>
+                                </a>
+                                    <%}%>
+                                
+
+
+                                <% if(task.isCompleted==false){%>
+                                    <form action="/update/<%= task._id %>" method="POST">
+                                        <select name="status" onchange="this.form.submit()" class="border p-1 rounded">
+
+                                            <option <%=task.isCompleted===false ? 'selected' : '' %>>
+                                                PENDING
+                                            </option>
+                                            <option value="<%= true %>">
+                                                COMPLETED
+                                            </option>
+                                        </select>
+                                    </form>
+                                    <%}else{ %>
+                                        <option disabled>
+                                            COMPLETED
+                                        </option>
+                                        <%}%>
+                                            <form class="deleteTask">
+                                                <input class="taskid" type="hidden" value="<%= task._id %>">
+                                                <button type="submit"
+                                                    class="bg-red-500 rounded text-white hover:bg-red-600 px-3 py-1">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                     </div>
+                              </div>
+                         </div>
+                    <div class="modal fade"  id="editTaskModal<%= task._id %>" tabindex="-1"
+                         aria-labelledby="editTaskModalLabel<%= task._id %>" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editTaskModalLabel<%= task._id %>">Edit Task</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form class="updateTaskForm" data-task-id="<%= task._id %>">
+                                        <div class="mb-3">
+                                            <label for="title<%= task._id %>" class="form-label">Title</label>
+                                            <input type="text" class="form-control" id="title<%= task._id %>"
+                                                name="title" value="<%= task.title %>" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="description<%= task._id %>"
+                                                class="form-label">Description</label>
+                                            <textarea class="form-control" id="description<%= task._id %>"
+                                                name="description" required><%= task.description %></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">Update Task</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Task form submission
+            document.getElementById('taskForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const title = document.getElementById('title').value;
+                const description = document.getElementById('description').value;
+                console.log(title, description);
+
+                await addTask(title, description);
+            });
+
+            // Delete form submission
+            document.querySelectorAll('.deleteTask').forEach(form => {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const taskId = form.querySelector('.taskid').value;
+                    console.log(taskId);
+
+
+                    await deleteTask(taskId);
+                })
+            });
+
+            document.querySelectorAll('.updateTaskForm').forEach(form => {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const taskId = form.getAttribute('data-task-id');
+                    const title = form.querySelector(`#title${taskId}`).value;
+                    const description = form.querySelector(`#description${taskId}`).value;
+                       
+
+                    await updateTask(taskId,title,description);
+                })
+            });
+
+
+
+            // Initialize Notyf
+            const notyf = new Notyf({
+                duration: 5000,
+                position: { x: 'center', y: 'bottom' },
+            });
+
+            // Function to add a task
+            const addTask = async (title, description) => {
+                try {
+                    const response = await fetch('/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ title, description }), 
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            notyf.success(data.message);
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            notyf.error(data.message);
+                        }
+                    } else {
+                        notyf.error("Failed to add task: Server error");
+                    }
+                } catch (error) {
+                    notyf.error("Failed to add task: Network error");
+                }
+            };
+
+            // Function to delete a task
+            const deleteTask = async (taskId) => {
+                try {
+                    const response = await fetch('/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ taskId }),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            notyf.success(data.message);
+                            setTimeout(() => window.location.reload(), 3500);
+                        } else {
+                            notyf.error(data.message);
+                        }
+                    } else {
+                        notyf.error("Failed to delete task: Server error");
+                    }
+                } catch (error) {
+                    notyf.error("Failed to delete task: Network error");
+                }
+            };
+
+
+            const updateTask = async (taskId,title,description) => {
+                try {
+                const response = await fetch(`/update-task/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title, description }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {                 
+                    notyf.success(data.message);
+                    const modal=bootstrap.Modal.getInstance(document.getElementById(`editTaskModal${data.id}`))
+                    modal.hide()
+                    
+                    setTimeout(() => window.location.reload(), 3500);
+                } else {
+                    notyf.error(data.message);
+                }
+            } catch (error) {
+                notyf.error("Failed to update task");
+            }
+            };
+        });
+    </script>
+
+
+</body>
+
+</html>
